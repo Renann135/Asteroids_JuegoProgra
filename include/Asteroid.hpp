@@ -1,12 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
-// Asteroid with basic circular collision and wrap-around.
+// Asteroide con colisión circular básica y envolvimiento de pantalla (wrap-around).
 struct Asteroid {
     sf::Vector2f position;
     sf::Vector2f velocity;
     float radius = 24.f;
-    int size = 2; // 2 = large, 1 = medium, 0 = small
+    int size = 2; // 2 = grande, 1 = mediano, 0 = pequeño
     const sf::Texture* texture = nullptr;
     bool alive = true;
 

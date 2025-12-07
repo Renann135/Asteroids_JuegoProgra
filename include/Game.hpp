@@ -7,14 +7,14 @@
 #include "Asteroid.hpp"
 #include "Bullet.hpp"
 
-// Simple Asteroids-style game core. Public API is minimal:
-// create Game and call run().
+// Núcleo simple de un juego estilo Asteroides. La API pública es mínima:
+// crea `Game` y llama a `run()`.
 class Game {
 public:
     Game();
     void run();
 
-    // Attempts to load a texture and store it under id. Returns pointer or nullptr on failure.
+    // Intenta cargar una textura y guardarla bajo `id`. Devuelve puntero o `nullptr` en caso de fallo.
     const sf::Texture* loadTexture(const std::string& id, const std::string& path);
 
 private:
@@ -25,10 +25,10 @@ private:
     void resetLevel();
     bool circleCollision(const sf::Vector2f& aPos, float aR, const sf::Vector2f& bPos, float bR);
 
-    // Menu and states
+    // Menú y estados
     enum class State { Menu, Playing, GameOver };
     State state = State::Menu;
-    int menuSelection = 0; // 0 = Play, 1 = Exit
+    int menuSelection = 0; // 0 = Jugar, 1 = Salir
     const std::vector<std::string> menuOptions = {"Jugar", "Salir"};
     const sf::Texture* backgroundTexture = nullptr;
 
@@ -46,6 +46,6 @@ private:
     int lives = 3;
     float timeSinceLastShot = 0.f;
     float asteroidTimer = 0.f;
-    // Tracks total elapsed play time (seconds) to raise difficulty over time
+    // Registra el tiempo total de juego (segundos) para aumentar la dificultad con el tiempo
     float elapsedTime = 0.f;
 };

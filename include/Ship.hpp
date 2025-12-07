@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "Bullet.hpp"
 
-// Player ship. Keeps shape/texture and simple physics.
+// Nave del jugador. Mantiene forma/textura y física sencilla.
 class Ship {
 public:
     Ship();
@@ -14,14 +14,14 @@ public:
 
     sf::Vector2f position;
     sf::Vector2f velocity;
-    float angle = -90.f; // up
+    float angle = -90.f; // arriba
     float radius = 16.f;
 
-    const sf::Texture* texture = nullptr; // optional texture
+    const sf::Texture* texture = nullptr; // textura opcional
     bool alive = true;
 private:
     float thrust = 200.f;
-    float rotationSpeed = 180.f; // degrees per second
+    float rotationSpeed = 180.f; // grados por segundo
     float shootCooldown = 0.2f;
     float timeSinceShot = 0.f;
 };

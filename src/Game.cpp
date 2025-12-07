@@ -10,34 +10,34 @@ static const int HEIGHT = 720;
 
 Game::Game(): window(sf::VideoMode(WIDTH, HEIGHT), "Asteroides"), player() {
     window.setFramerateLimit(60);
-    // try load a font (optional)
+    // intentar cargar una fuente (opcional)
     if (font.loadFromFile("assets/arial.ttf")) {
         hud.setFont(font);
         hud.setCharacterSize(18);
         hud.setFillColor(sf::Color::White);
     }
-    // attempt to load some example textures - if these files don't exist
-    // the game will continue drawing simple shapes instead of crashing.
+    // intentar cargar algunas texturas de ejemplo - si estos archivos no existen
+    // el juego seguirá dibujando formas simples en lugar de fallar.
     const sf::Texture* t = nullptr;
     t = loadTexture("ship", "assets/imagenes/ship.png");
     if (t) player.texture = t;
 
-    // asteroid texture (shared)
+    // textura de asteroide (compartida)
     loadTexture("asteroid", "assets/asteroid_2.png");
 
-    // Optional bullet texture
+    // textura opcional de bala
     loadTexture("bullet", "assets/imagenes/bullet.png");
 
-    // background for menu and playing
+    // fondo para menú y partida
     backgroundTexture = loadTexture("background", "assets/EspacioFondoJugando.jpg");
 
-    // heart texture for lives
+    // textura de corazón para vidas
     loadTexture("heart", "assets/imagenes/heart.png");
 
-    // seed randomness
+    // inicializar semilla aleatoria
     std::srand((unsigned)std::time(nullptr));
 
-    // start in menu state
+    // iniciar en estado de menú
     state = State::Menu;
 
     resetLevel();
@@ -77,12 +77,12 @@ void Game::processEvents() {
                     menuSelection = (menuSelection + 1) % (int)menuOptions.size();
                 } else if (ev.key.code == sf::Keyboard::Enter || ev.key.code == sf::Keyboard::Space) {
                     if (menuSelection == 0) {
-                        // Play
+                        // Jugar
                         score = 0; lives = 3; elapsedTime = 0.f; asteroidTimer = 0.f;
                         resetLevel();
                         state = State::Playing;
                     } else {
-                        // Exit
+                        // Salir
                         window.close();
                     }
                 }
@@ -90,7 +90,7 @@ void Game::processEvents() {
                 if (ev.key.code == sf::Keyboard::R && lives<=0) {
                     score = 0; lives = 3; elapsedTime = 0.f; asteroidTimer = 0.f; resetLevel(); state = State::Playing;
                 }
-                // Return to menu from GameOver
+                // Volver al menú desde GameOver
                 if (ev.key.code == sf::Keyboard::M && state == State::GameOver) {
                     state = State::Menu;
                     menuSelection = 0;
@@ -98,11 +98,11 @@ void Game::processEvents() {
             }
         }
 
-        // Mouse handling for menu: hovering and clicking
+        // Manejo del ratón en el menú: pasar por encima y clic
         if (ev.type == sf::Event::MouseMoved && state == State::Menu) {
             sf::Vector2i mpos = sf::Mouse::getPosition(window);
-            // compute menu option rectangles and detect hover
-            float spacing = 72.f; // increased spacing
+            // calcular rectángulos de opciones de menú y detectar si el cursor está encima
+            float spacing = 72.f; // espacio aumentado
             for (size_t i=0;i<menuOptions.size();++i) {
                 if (font.getInfo().family != "") {
                     sf::Text opt(menuOptions[i], font, 32);
@@ -115,7 +115,7 @@ void Game::processEvents() {
                         break;
                     }
                 } else {
-                    // fallback rectangle
+                    // rectángulo alternativo
                     float w = 220.f, h = 44.f;
                     float x = WIDTH/2.f - w/2.f;
                     float y = HEIGHT*0.5f + (float)i*spacing - h/2.f;
@@ -157,15 +157,15 @@ void Game::processEvents() {
 }
 
 void Game::update(float dt) {
-    if (lives <= 0) return; // game over: wait for restart
+    if (lives <= 0) return; // fin del juego: esperar reinicio
 
-    // time bookkeeping used for difficulty scaling
+    // registro de tiempo usado para ajustar la dificultad
     elapsedTime += dt;
     timeSinceLastShot += dt;
     asteroidTimer += dt;
 
     player.handleInput();
-    // shooting (cooldown handled by Game's timer)
+    // disparo (enfriamiento manejado por el temporizador de Game)
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && timeSinceLastShot >= 0.18f) {
         bullets.push_back(player.shoot());
         timeSinceLastShot = 0.f;
@@ -174,15 +174,15 @@ void Game::update(float dt) {
     player.update(dt);
     player.update(dt);
 
-    // update bullets
+    // actualizar balas
     for (auto& b : bullets) b.update(dt);
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](const Bullet& b){return !b.alive;}), bullets.end());
 
-    // update asteroids
+    // actualizar asteroides
     for (auto& a : asteroids) a.update(dt);
     asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), [](const Asteroid& a){return !a.alive;}), asteroids.end());
 
-    // collisions: bullets vs asteroids
+    // colisiones: balas vs asteroides
     for (auto& b : bullets) {
         for (auto& a : asteroids) {
             if (!b.alive || !a.alive) continue;
@@ -190,7 +190,7 @@ void Game::update(float dt) {
                 b.alive = false;
                 a.alive = false;
                 score += 100 * (a.size+1);
-                // split
+                // dividir en asteroides más pequeños
                 if (a.size > 0) {
                     for (int i=0;i<2;i++) {
                         Asteroid child = a;
@@ -207,12 +207,12 @@ void Game::update(float dt) {
         }
     }
 
-    // ship vs asteroid
+    // nave vs asteroide
     for (auto& a : asteroids) {
         if (!a.alive || !player.alive) continue;
         if (circleCollision(player.position, player.radius, a.position, a.radius)) {
             player.alive = false;
-            // Damage: 1 vida hasta 1500 puntos; a partir de 1500, el impacto hace 2 de daño
+            // Daño: 1 vida hasta 1500 puntos; a partir de 1500, el impacto hace 2 de daño
             int daño = (score >= 1500) ? 2 : 1;
             lives -= daño;
             if (lives>0) {
@@ -226,18 +226,18 @@ void Game::update(float dt) {
         }
     }
 
-    // spawn more asteroids if cleared
+    // generar más asteroides si se han eliminado todos
     if (asteroids.empty()) {
-        // increase initial count slowly as time passes
+        // aumentar la cantidad inicial lentamente con el tiempo
         unsigned base = 4u;
-        unsigned extra = static_cast<unsigned>(elapsedTime / 20.0f); // +1 every 20s
+        unsigned extra = static_cast<unsigned>(elapsedTime / 20.0f); // +1 cada 20s
         spawnAsteroids(base + extra);
     }
 
-    // Periodic spawn: as the game progresses, spawn interval shortens, making difficulty increase.
-    float spawnInterval = std::max(1.0f, 5.0f - elapsedTime / 60.0f); // from 5s down to min 1s
+    // Generación periódica: conforme avanza el juego, el intervalo entre generados se acorta, aumentando la dificultad.
+    float spawnInterval = std::max(1.0f, 5.0f - elapsedTime / 60.0f); // de 5s hasta mínimo 1s
     if (asteroidTimer > spawnInterval) {
-        // spawn a small number scaled by time
+        // generar una pequeña cantidad escalada por el tiempo
         unsigned count = 1 + static_cast<unsigned>(elapsedTime / 60.0f);
         spawnAsteroids(count);
         asteroidTimer = 0.f;
@@ -247,7 +247,7 @@ void Game::update(float dt) {
 void Game::render() {
     window.clear(sf::Color::Black);
 
-    // If in Menu, draw background and options
+    // Si está en Menú, dibujar fondo y opciones
     if (state == State::Menu) {
         if (backgroundTexture) {
             sf::Sprite bg(*backgroundTexture);
@@ -257,7 +257,7 @@ void Game::render() {
             bg.setScale(sx, sy);
             window.draw(bg);
         } else {
-            // fallback background color
+            // color de fondo alternativo
             window.clear(sf::Color(10,10,30));
         }
 
@@ -284,8 +284,8 @@ void Game::render() {
         return;
     }
 
-    // Playing or GameOver
-    // draw background for playing
+    // Jugando o GameOver
+    // dibujar fondo para la partida
     if (backgroundTexture) {
         sf::Sprite bg(*backgroundTexture);
         auto tx = backgroundTexture->getSize();
@@ -294,18 +294,18 @@ void Game::render() {
         bg.setScale(sx, sy);
         window.draw(bg);
     } else {
-        // fallback background for playing
-        // leave the cleared color (black) or draw a subtle dark fill
+        // fondo alternativo para la partida
+        // mantener el color limpio (negro) o dibujar un relleno oscuro sutil
     }
 
-    // draw bullets
+    // dibujar balas
     for (auto& b : bullets) b.draw(window);
-    // draw asteroids
+    // dibujar asteroides
     for (auto& a : asteroids) a.draw(window);
-    // draw player
+    // dibujar jugador
     if (player.alive) player.draw(window);
 
-    // HUD: score and hearts for lives
+    // HUD: puntos y corazones para vidas
     if (font.getInfo().family != "") {
     std::ostringstream ss;
     ss << "Puntos: " << score;
@@ -313,7 +313,7 @@ void Game::render() {
         hud.setPosition(8.f, 8.f);
         window.draw(hud);
 
-        // draw hearts at top-right
+        // dibujar corazones en la esquina superior derecha
         const float heartSize = 20.f;
         for (int i=0;i<lives;i++) {
             float x = WIDTH - 8.f - (i+1)*(heartSize+6.f);
@@ -328,11 +328,11 @@ void Game::render() {
                 hs.setPosition(x, y);
                 window.draw(hs);
             } else {
-                // fallback: draw a simple heart shape using ConvexShape
+                // alternativa: dibujar una forma de corazón simple usando ConvexShape
                 sf::ConvexShape heart;
                 heart.setPointCount(6);
                 float s = heartSize;
-                // points approximate a heart centered at (0,0)
+                // los puntos aproximan un corazón centrado en (0,0)
                 heart.setPoint(0, sf::Vector2f(0.f, -s*0.15f));
                 heart.setPoint(1, sf::Vector2f(s*0.25f, -s*0.5f));
                 heart.setPoint(2, sf::Vector2f(s*0.5f, -s*0.15f));
@@ -340,9 +340,9 @@ void Game::render() {
                 heart.setPoint(4, sf::Vector2f(-s*0.5f, -s*0.15f));
                 heart.setPoint(5, sf::Vector2f(-s*0.25f, -s*0.5f));
                 heart.setFillColor(sf::Color::Red);
-                // position it inside the top-right area
+                // posicionarlo en el área superior derecha
                 heart.setPosition(x + heartSize/2.f, y + heartSize/2.f + 4.f);
-                // scale down a touch so it fits nicely
+                // escalarlo un poco para que encaje bien
                 float scale = (heartSize / (s));
                 heart.setScale(scale, scale);
                 heart.setOrigin(0.f, 0.f);
@@ -368,7 +368,7 @@ void Game::render() {
 void Game::spawnAsteroids(unsigned n) {
     for (unsigned i=0;i<n;i++) {
         Asteroid a;
-        // place around screen edges
+        // colocar alrededor de los bordes de la pantalla
         int side = std::rand()%4;
         switch(side) {
             case 0: a.position = {float(std::rand()%WIDTH), -20.f}; break;
@@ -377,14 +377,14 @@ void Game::spawnAsteroids(unsigned n) {
             default: a.position = {float(WIDTH+20), float(std::rand()%HEIGHT)}; break;
         }
         float ang = (std::rand()%360) * 3.14159f/180.f;
-        // Difficulty: increase asteroid speed slowly over time
-        float difficultyMultiplier = 1.0f + (elapsedTime / 60.0f); // +100% speed per minute
+        // Dificultad: aumentar la velocidad de los asteroides lentamente con el tiempo
+        float difficultyMultiplier = 1.0f + (elapsedTime / 60.0f); // +100% de velocidad por minuto
         float speed = (30.f + std::rand()%80) * difficultyMultiplier;
         a.velocity = {std::cos(ang)*speed, std::sin(ang)*speed};
         a.size = 2;
         a.radius = 32.f + std::rand()%16;
         a.alive = true;
-        // assign texture if available
+        // asignar textura si está disponible
         auto it = textures.find("asteroid");
         if (it != textures.end()) a.texture = &it->second;
         asteroids.push_back(a);

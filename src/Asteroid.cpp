@@ -18,7 +18,7 @@ void Asteroid::draw(sf::RenderTarget& target) const {
         s.setOrigin(texture->getSize().x/2.f, texture->getSize().y/2.f);
         s.setPosition(position);
         float scale = (radius*2.f) / std::max(1u, texture->getSize().x);
-        // enlarge asteroid images slightly to be more visible
+        // aumentar ligeramente las imágenes de asteroide para que sean más visibles
         const float EXTRA_SCALE = 7.f;
         s.setScale(scale * EXTRA_SCALE, scale * EXTRA_SCALE);
         target.draw(s);

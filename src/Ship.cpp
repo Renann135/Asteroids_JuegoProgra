@@ -15,10 +15,10 @@ void Ship::reset(const sf::Vector2f& pos) {
 }
 
 void Ship::handleInput() {
-    // rotation
+    // rotación
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) angle -= rotationSpeed * (1.f/60.f);
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) angle += rotationSpeed * (1.f/60.f);
-    // thrust
+    // empuje
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
         float rad = angle * 3.14159f/180.f;
         velocity.x += std::cos(rad) * thrust * (1.f/60.f);
@@ -27,10 +27,10 @@ void Ship::handleInput() {
 }
 
 void Ship::update(float dt) {
-    // simple damping
+    // atenuación simple
     velocity *= 0.995f;
     position += velocity * dt;
-    // wrap
+    // envolver en pantalla (wrap-around)
     if (position.x < 0) position.x += WIDTH;
     if (position.x > WIDTH) position.x -= WIDTH;
     if (position.y < 0) position.y += HEIGHT;
@@ -50,7 +50,7 @@ Bullet Ship::shoot() {
 }
 
 void Ship::draw(sf::RenderTarget& target) const {
-    // Render the ship as a solid white triangle regardless of texture, per request.
+    // Dibujar la nave como un triángulo blanco sólido independientemente de la textura.
     sf::ConvexShape tri; tri.setPointCount(3);
     tri.setPoint(0, sf::Vector2f(0.f, -radius));
     tri.setPoint(1, sf::Vector2f(-radius*0.6f, radius));
