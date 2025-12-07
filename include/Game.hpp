@@ -28,7 +28,7 @@ private:
     // Menú y estados
     enum class State { Menu, Playing, GameOver };
     State state = State::Menu;
-    int menuSelection = 0; // 0 = Jugar, 1 = Salir
+    int menuSelection = 0; // 0 = Jugar, 1 = Salir.
     const std::vector<std::string> menuOptions = {"Jugar", "Salir"};
     const sf::Texture* backgroundTexture = nullptr;
 
