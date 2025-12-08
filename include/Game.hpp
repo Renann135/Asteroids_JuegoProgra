@@ -1,8 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 #include "Ship.hpp"
 #include "Asteroid.hpp"
 #include "Bullet.hpp"
@@ -24,6 +26,11 @@ private:
     void spawnAsteroids(unsigned n);
     void resetLevel();
     bool circleCollision(const sf::Vector2f& aPos, float aR, const sf::Vector2f& bPos, float bR);
+    
+    // Sistema de música
+    void loadMusicTracks();
+    void playRandomTrack();
+    void updateMusic();
 
     // Menú y estados
     enum class State { Menu, Playing, GameOver };
@@ -48,4 +55,19 @@ private:
     float asteroidTimer = 0.f;
     // Registra el tiempo total de juego (segundos) para aumentar la dificultad con el tiempo
     float elapsedTime = 0.f;
+    
+    // Sistema de música
+    // Sistema de música
+    std::vector<std::string> musicPaths;
+    std::vector<std::unique_ptr<sf::Music>> musicTracks;
+    int currentTrackIndex = -1;
+    float musicVolume = 50.f; // 0-100
+    float musicFadeTimer = 0.f;
+    
+    // Sonido de disparo
+    sf::SoundBuffer shootSoundBuffer;
+    sf::Sound shootSound;
+    
+    // Barra de volumen - propiedades para interacción con mouse
+    sf::FloatRect volumeBarRect;
 };

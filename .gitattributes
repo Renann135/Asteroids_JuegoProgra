@@ -1,0 +1,8 @@
+song1.mp3 filter=lfs diff=lfs merge=lfs -text
+song2.mp3 filter=lfs diff=lfs merge=lfs -text
+song3.mp3 filter=lfs diff=lfs merge=lfs -text
+song4.mp3 filter=lfs diff=lfs merge=lfs -text
+song5.mp3 filter=lfs diff=lfs merge=lfs -text
+song6.mp3 filter=lfs diff=lfs merge=lfs -text
+song7.mp3 filter=lfs diff=lfs merge=lfs -text
+disparonave.mp3 filter=lfs diff=lfs merge=lfs -text

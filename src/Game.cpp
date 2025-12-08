@@ -8,7 +8,7 @@
 static const int WIDTH = 1280;
 static const int HEIGHT = 720;
 
-Game::Game(): window(sf::VideoMode(WIDTH, HEIGHT), "Asteroides"), player() {
+Game::Game(): window(sf::VideoMode(WIDTH, HEIGHT), "ASTEROIDS"), player() {
     window.setFramerateLimit(60);
     // intentar cargar una fuente (opcional)
     if (font.loadFromFile("assets/arial.ttf")) {
@@ -36,6 +36,16 @@ Game::Game(): window(sf::VideoMode(WIDTH, HEIGHT), "Asteroides"), player() {
 
     // inicializar semilla aleatoria
     std::srand((unsigned)std::time(nullptr));
+
+    // inicializar música
+    loadMusicTracks();
+    playRandomTrack();
+    
+    // cargar sonido de disparo
+    if (shootSoundBuffer.loadFromFile("assets/Musica/disparonave.mp3")) {
+        shootSound.setBuffer(shootSoundBuffer);
+        shootSound.setVolume(musicVolume);
+    }
 
     // iniciar en estado de menú
     state = State::Menu;
@@ -69,6 +79,18 @@ void Game::processEvents() {
         if (ev.type == sf::Event::KeyPressed) {
             if (ev.key.code == sf::Keyboard::Escape) {
                 window.close();
+            }
+            // Controles de volumen
+            if (ev.key.code == sf::Keyboard::Up && ev.key.shift) {
+                musicVolume = std::min(100.f, musicVolume + 5.f);
+                if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
+                    musicTracks[currentTrackIndex]->setVolume(musicVolume);
+                }
+            } else if (ev.key.code == sf::Keyboard::Down && ev.key.shift) {
+                musicVolume = std::max(0.f, musicVolume - 5.f);
+                if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
+                    musicTracks[currentTrackIndex]->setVolume(musicVolume);
+                }
             }
             if (state == State::Menu) {
                 if (ev.key.code == sf::Keyboard::Up || ev.key.code == sf::Keyboard::W) {
@@ -153,10 +175,33 @@ void Game::processEvents() {
                 }
             }
         }
+        
+        // Manejador de clics en la barra de volumen
+        if (ev.type == sf::Event::MouseButtonPressed && ev.mouseButton.button == sf::Mouse::Left) {
+            sf::Vector2i mpos = sf::Mouse::getPosition(window);
+            if (volumeBarRect.contains((float)mpos.x, (float)mpos.y)) {
+                // Calcular el nuevo volumen basado en la posición del clic
+                float relativeX = (float)mpos.x - volumeBarRect.left;
+                musicVolume = (relativeX / volumeBarRect.width) * 100.f;
+                musicVolume = std::max(0.f, std::min(100.f, musicVolume));
+                
+                // Actualizar volumen de la música actual
+                if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
+                    musicTracks[currentTrackIndex]->setVolume(musicVolume);
+                }
+                
+                // Actualizar volumen del sonido de disparo
+                shootSound.setVolume(musicVolume);
+            }
+        }
     }
 }
 
 void Game::update(float dt) {
+
+    // Actualizar música
+    updateMusic();
+    
     if (lives <= 0) return; // fin del juego: esperar reinicio
 
     // registro de tiempo usado para ajustar la dificultad
@@ -169,6 +214,9 @@ void Game::update(float dt) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && timeSinceLastShot >= 0.18f) {
         bullets.push_back(player.shoot());
         timeSinceLastShot = 0.f;
+        // Reproducir sonido de disparo
+        shootSound.setVolume(musicVolume);
+        shootSound.play();
     }
 
     player.update(dt);
@@ -212,8 +260,9 @@ void Game::update(float dt) {
         if (!a.alive || !player.alive) continue;
         if (circleCollision(player.position, player.radius, a.position, a.radius)) {
             player.alive = false;
-            // Daño: 1 vida hasta 1500 puntos; a partir de 1500, el impacto hace 2 de daño
-            int daño = (score >= 1500) ? 2 : 1;
+            // Daño: 1 vida hasta 15000 puntos; a partir de 1500, el impacto hace 2 de daño
+            int daño = (score >= 15000) ? 2 : 1;
+
             lives -= daño;
             if (lives>0) {
                 player.reset(sf::Vector2f(WIDTH/2.f, HEIGHT/2.f));
@@ -349,11 +398,55 @@ void Game::render() {
                 window.draw(heart);
             }
         }
+        
+        // Dibujar barra de volumen debajo de los corazones
+        float barWidth = 100.f;
+        float barHeight = 8.f;
+        float barX = WIDTH - barWidth - 8.f;
+        float barY = 8.f + heartSize + 12.f;
+        
+        // Guardar la posición de la barra para interacción con mouse
+        volumeBarRect = sf::FloatRect(barX, barY, barWidth, barHeight);
+        
+        // Fondo de la barra (gris oscuro)
+        sf::RectangleShape barBg(sf::Vector2f(barWidth, barHeight));
+        barBg.setPosition(barX, barY);
+        barBg.setFillColor(sf::Color(64, 64, 64));
+        window.draw(barBg);
+        
+        // Barra de volumen (verde/amarillo según volumen)
+        float fillWidth = (musicVolume / 100.f) * barWidth;
+        sf::RectangleShape barFill(sf::Vector2f(fillWidth, barHeight));
+        barFill.setPosition(barX, barY);
+        
+        // Color según volumen
+        if (musicVolume < 30.f) {
+            barFill.setFillColor(sf::Color::Red);
+        } else if (musicVolume < 70.f) {
+            barFill.setFillColor(sf::Color::Yellow);
+        } else {
+            barFill.setFillColor(sf::Color::Green);
+        }
+        window.draw(barFill);
+        
+        // Borde de la barra
+        sf::RectangleShape barBorder(sf::Vector2f(barWidth, barHeight));
+        barBorder.setPosition(barX, barY);
+        barBorder.setFillColor(sf::Color::Transparent);
+        barBorder.setOutlineThickness(1.f);
+        barBorder.setOutlineColor(sf::Color::White);
+        window.draw(barBorder);
+        
+        // Texto de volumen
+        sf::Text volText(std::to_string((int)musicVolume) + "%", font, 12);
+        volText.setFillColor(sf::Color::White);
+        volText.setPosition(barX, barY + barHeight + 2.f);
+        window.draw(volText);
     }
 
     if (lives<=0) {
         if (font.getInfo().family != "") {
-            sf::Text go("FIN DEL JUEGO - Pulsa R para reiniciar o M para menú", font, 28);
+            sf::Text go("FIN DEL JUEGO - Pulsa R para reiniciar o M para menu", font, 28);
             go.setFillColor(sf::Color::Red);
             auto b = go.getLocalBounds();
             go.setOrigin(b.width/2.f, b.height/2.f);
@@ -403,4 +496,50 @@ bool Game::circleCollision(const sf::Vector2f& aPos, float aR, const sf::Vector2
     float dy = aPos.y - bPos.y;
     float r = aR + bR;
     return (dx*dx + dy*dy) <= (r*r);
+}
+
+void Game::loadMusicTracks() {
+    // Cargar las 7 canciones
+    musicPaths = {
+        "assets/Musica/song1.mp3",
+        "assets/Musica/song2.mp3",
+        "assets/Musica/song3.mp3",
+        "assets/Musica/song4.mp3",
+        "assets/Musica/song5.mp3",
+        "assets/Musica/song6.mp3",
+        "assets/Musica/song7.mp3"
+    };
+    
+    // Intentar cargar cada canción
+    for (const auto& path : musicPaths) {
+        auto music = std::make_unique<sf::Music>();
+        if (music->openFromFile(path)) {
+            musicTracks.push_back(std::move(music));
+        }
+    }
+}
+
+void Game::playRandomTrack() {
+    if (musicTracks.empty()) return;
+    
+    // Seleccionar una canción aleatoria
+    currentTrackIndex = std::rand() % musicTracks.size();
+    musicTracks[currentTrackIndex]->setVolume(musicVolume);
+    musicTracks[currentTrackIndex]->play();
+}
+
+void Game::updateMusic() {
+    if (musicTracks.empty()) return;
+    
+    // Verificar si la canción actual está reproduciéndose
+    if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
+        if (musicTracks[currentTrackIndex]->getStatus() != sf::Music::Playing) {
+            // La canción terminó, reproducir una nueva aleatoriamente
+            // Detener la canción anterior si aún está activa
+            if (musicTracks[currentTrackIndex]->getStatus() != sf::Music::Stopped) {
+                musicTracks[currentTrackIndex]->stop();
+            }
+            playRandomTrack();
+        }
+    }
 }
