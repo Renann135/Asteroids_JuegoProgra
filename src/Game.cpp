@@ -9,11 +9,10 @@ int WIDTH = 1280;
 int HEIGHT = 720;
 
 Game::Game(): player() {
-    // Usar la resolución del escritorio y crear la ventana en fullscreen
-    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    WIDTH = desktop.width;
-    HEIGHT = desktop.height;
-    window.create(sf::VideoMode(WIDTH, HEIGHT), "ASTEROIDS", sf::Style::Fullscreen);
+    // Fijar resolución a 1280x720 en modo ventana
+    WIDTH = 1280;
+    HEIGHT = 720;
+    window.create(sf::VideoMode(WIDTH, HEIGHT), "ASTEROIDS", sf::Style::Default);
     window.setFramerateLimit(60);
     // intentar cargar una fuente (opcional)
     if (font.loadFromFile("assets/arial.ttf")) {
