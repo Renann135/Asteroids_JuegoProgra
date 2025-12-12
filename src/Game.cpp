@@ -176,9 +176,10 @@ void Game::processEvents() {
             }
         }
         
-        // Manejador de clics en la barra de volumen
+        // Manejador de clics en la barra de volumen y botones de música
         if (ev.type == sf::Event::MouseButtonPressed && ev.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2i mpos = sf::Mouse::getPosition(window);
+            // Barra de volumen
             if (volumeBarRect.contains((float)mpos.x, (float)mpos.y)) {
                 // Calcular el nuevo volumen basado en la posición del clic
                 float relativeX = (float)mpos.x - volumeBarRect.left;
@@ -192,6 +193,14 @@ void Game::processEvents() {
                 
                 // Actualizar volumen del sonido de disparo
                 shootSound.setVolume(musicVolume);
+            }
+            // Botones: anterior / play-pause / siguiente
+            else if (prevButtonRect.contains((float)mpos.x, (float)mpos.y)) {
+                playPrevTrack();
+            } else if (playPauseButtonRect.contains((float)mpos.x, (float)mpos.y)) {
+                toggleMusicPlayPause();
+            } else if (nextButtonRect.contains((float)mpos.x, (float)mpos.y)) {
+                playNextTrack();
             }
         }
     }
@@ -269,6 +278,9 @@ void Game::update(float dt) {
                 player.alive = true;
             } else {
                 // sin vidas -> estado GameOver
+                if (score > maxScore) {
+                    maxScore = score;
+                }
                 state = State::GameOver;
             }
             break;
@@ -442,16 +454,124 @@ void Game::render() {
         volText.setFillColor(sf::Color::White);
         volText.setPosition(barX, barY + barHeight + 2.f);
         window.draw(volText);
+        
+        // Botones de control de música (debajo de la barra de volumen)
+        float btnSize = 28.f;
+        float gap = 8.f;
+        float btnY = barY + barHeight + 18.f;
+        // Centrar los 3 botones respecto a la barra
+        float centerX = barX + barWidth/2.f;
+        float totalW = btnSize*3 + gap*2;
+        float startX = centerX - totalW/2.f;
+
+        // Rects de los botones
+        prevButtonRect = sf::FloatRect(startX, btnY, btnSize, btnSize);
+        playPauseButtonRect = sf::FloatRect(startX + (btnSize + gap), btnY, btnSize, btnSize);
+        nextButtonRect = sf::FloatRect(startX + 2*(btnSize + gap), btnY, btnSize, btnSize);
+
+        // Dibujar fondo de los botones
+        sf::RectangleShape btnShape(sf::Vector2f(btnSize, btnSize));
+        // Prev
+        btnShape.setPosition(prevButtonRect.left, prevButtonRect.top);
+        btnShape.setFillColor(sf::Color(40,40,40));
+        btnShape.setOutlineThickness(1.f);
+        btnShape.setOutlineColor(sf::Color::White);
+        window.draw(btnShape);
+        // Play/Pause
+        btnShape.setPosition(playPauseButtonRect.left, playPauseButtonRect.top);
+        window.draw(btnShape);
+        // Next
+        btnShape.setPosition(nextButtonRect.left, nextButtonRect.top);
+        window.draw(btnShape);
+
+        // Dibujar iconos gráficos para los botones
+        // Prev: dos triángulos apuntando a la izquierda
+        auto drawLeftTriangle = [&](float x, float y, float w, float h, const sf::Color& col){
+            sf::ConvexShape tri; tri.setPointCount(3);
+            tri.setPoint(0, sf::Vector2f(x + w, y));
+            tri.setPoint(1, sf::Vector2f(x, y + h*0.5f));
+            tri.setPoint(2, sf::Vector2f(x + w, y + h));
+            tri.setFillColor(col);
+            window.draw(tri);
+        };
+        // Right-pointing triangle
+        auto drawRightTriangle = [&](float x, float y, float w, float h, const sf::Color& col){
+            sf::ConvexShape tri; tri.setPointCount(3);
+            tri.setPoint(0, sf::Vector2f(x, y));
+            tri.setPoint(1, sf::Vector2f(x + w, y + h*0.5f));
+            tri.setPoint(2, sf::Vector2f(x, y + h));
+            tri.setFillColor(col);
+            window.draw(tri);
+        };
+
+        // Prev: two left triangles
+        float triW = btnSize * 0.45f;
+        float triH = btnSize * 0.7f;
+        float padY = (btnSize - triH) * 0.5f;
+        drawLeftTriangle(prevButtonRect.left + btnSize*0.15f, prevButtonRect.top + padY, triW, triH, sf::Color::White);
+        drawLeftTriangle(prevButtonRect.left + btnSize*0.45f, prevButtonRect.top + padY, triW, triH, sf::Color::White);
+
+        // Play / Pause
+        if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size() && musicTracks[currentTrackIndex]->getStatus() == sf::Music::Playing) {
+            // Pause icon: two small rectangles
+            sf::RectangleShape r1(sf::Vector2f(btnSize*0.18f, btnSize*0.6f));
+            sf::RectangleShape r2(sf::Vector2f(btnSize*0.18f, btnSize*0.6f));
+            float rx = playPauseButtonRect.left + (btnSize - r1.getSize().x*2 - gap*0.2f)/2.f;
+            float ry = playPauseButtonRect.top + (btnSize - r1.getSize().y)/2.f;
+            r1.setPosition(rx, ry);
+            r2.setPosition(rx + r1.getSize().x + gap*0.1f, ry);
+            r1.setFillColor(sf::Color::White); r2.setFillColor(sf::Color::White);
+            window.draw(r1); window.draw(r2);
+        } else {
+            // Play icon: single right-pointing triangle
+            float pw = btnSize * 0.5f;
+            float ph = btnSize * 0.6f;
+            float px = playPauseButtonRect.left + (btnSize - pw)/2.f;
+            float py = playPauseButtonRect.top + (btnSize - ph)/2.f;
+            drawRightTriangle(px, py, pw, ph, sf::Color::White);
+        }
+
+        // Next: two right triangles
+        drawRightTriangle(nextButtonRect.left + btnSize*0.4f, nextButtonRect.top + padY, triW, triH, sf::Color::White);
+        drawRightTriangle(nextButtonRect.left + btnSize*0.1f, nextButtonRect.top + padY, triW, triH, sf::Color::White);
     }
 
     if (lives<=0) {
         if (font.getInfo().family != "") {
-            sf::Text go("FIN DEL JUEGO - Pulsa R para reiniciar o M para menu", font, 28);
+            sf::Text go("FIN DEL JUEGO", font, 48);
             go.setFillColor(sf::Color::Red);
             auto b = go.getLocalBounds();
             go.setOrigin(b.width/2.f, b.height/2.f);
-            go.setPosition(WIDTH/2.f, HEIGHT/2.f);
+            go.setPosition(WIDTH/2.f, HEIGHT/2.f - 80.f);
             window.draw(go);
+            
+            // Mostrar puntuacion final
+            std::ostringstream finalScore;
+            finalScore << "Puntuacion Final: " << score;
+            sf::Text finalScoreText(finalScore.str(), font, 32);
+            finalScoreText.setFillColor(sf::Color::Yellow);
+            auto fb = finalScoreText.getLocalBounds();
+            finalScoreText.setOrigin(fb.width/2.f, fb.height/2.f);
+            finalScoreText.setPosition(WIDTH/2.f, HEIGHT/2.f);
+            window.draw(finalScoreText);
+            
+            // Mostrar puntuacion maxima
+            std::ostringstream maxScoreStr;
+            maxScoreStr << "Mejor Puntuacion: " << maxScore;
+            sf::Text maxScoreText(maxScoreStr.str(), font, 32);
+            maxScoreText.setFillColor(sf::Color::Cyan);
+            auto mb = maxScoreText.getLocalBounds();
+            maxScoreText.setOrigin(mb.width/2.f, mb.height/2.f);
+            maxScoreText.setPosition(WIDTH/2.f, HEIGHT/2.f + 60.f);
+            window.draw(maxScoreText);
+            
+            // Instrucciones
+            sf::Text instructions("Pulsa R para reiniciar o M para menu", font, 24);
+            instructions.setFillColor(sf::Color::White);
+            auto ib = instructions.getLocalBounds();
+            instructions.setOrigin(ib.width/2.f, ib.height/2.f);
+            instructions.setPosition(WIDTH/2.f, HEIGHT/2.f + 140.f);
+            window.draw(instructions);
         }
     }
 
@@ -533,13 +653,39 @@ void Game::updateMusic() {
     
     // Verificar si la canción actual está reproduciéndose
     if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
-        if (musicTracks[currentTrackIndex]->getStatus() != sf::Music::Playing) {
-            // La canción terminó, reproducir una nueva aleatoriamente
-            // Detener la canción anterior si aún está activa
-            if (musicTracks[currentTrackIndex]->getStatus() != sf::Music::Stopped) {
-                musicTracks[currentTrackIndex]->stop();
-            }
+        // Solo avanzar a otra pista si la actual terminó (Stopped).
+        if (musicTracks[currentTrackIndex]->getStatus() == sf::Music::Stopped) {
             playRandomTrack();
         }
     }
+}
+
+// Reproducir / pausar la pista actual
+void Game::toggleMusicPlayPause() {
+    if (musicTracks.empty() || currentTrackIndex < 0) return;
+    auto& m = musicTracks[currentTrackIndex];
+    if (m->getStatus() == sf::Music::Playing) m->pause();
+    else m->play();
+}
+
+// Reproducir siguiente pista
+void Game::playNextTrack() {
+    if (musicTracks.empty()) return;
+    int n = (int)musicTracks.size();
+    int next = (currentTrackIndex + 1) % n;
+    if (currentTrackIndex >= 0) musicTracks[currentTrackIndex]->stop();
+    currentTrackIndex = next;
+    musicTracks[currentTrackIndex]->setVolume(musicVolume);
+    musicTracks[currentTrackIndex]->play();
+}
+
+// Reproducir pista anterior
+void Game::playPrevTrack() {
+    if (musicTracks.empty()) return;
+    int n = (int)musicTracks.size();
+    int prev = (currentTrackIndex - 1 + n) % n;
+    if (currentTrackIndex >= 0) musicTracks[currentTrackIndex]->stop();
+    currentTrackIndex = prev;
+    musicTracks[currentTrackIndex]->setVolume(musicVolume);
+    musicTracks[currentTrackIndex]->play();
 }

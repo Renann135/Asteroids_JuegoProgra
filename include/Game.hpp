@@ -31,6 +31,9 @@ private:
     void loadMusicTracks();
     void playRandomTrack();
     void updateMusic();
+    void toggleMusicPlayPause();
+    void playNextTrack();
+    void playPrevTrack();
 
     // Menú y estados
     enum class State { Menu, Playing, GameOver };
@@ -50,6 +53,7 @@ private:
     sf::Text hud;
 
     int score = 0;
+    int maxScore = 0;
     int lives = 3;
     float timeSinceLastShot = 0.f;
     float asteroidTimer = 0.f;
@@ -70,4 +74,8 @@ private:
     
     // Barra de volumen - propiedades para interacción con mouse
     sf::FloatRect volumeBarRect;
+    // Botones de control de música (anterior / reproducir/pausa / siguiente)
+    sf::FloatRect prevButtonRect;
+    sf::FloatRect playPauseButtonRect;
+    sf::FloatRect nextButtonRect;
 };
