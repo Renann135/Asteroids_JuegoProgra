@@ -71,6 +71,9 @@ private:
     // Sonido de disparo
     sf::SoundBuffer shootSoundBuffer;
     sf::Sound shootSound;
+    // Sonido de explosión de asteroide
+    sf::SoundBuffer explosionSoundBuffer;
+    sf::Sound explosionSound;
     
     // Barra de volumen - propiedades para interacción con mouse
     sf::FloatRect volumeBarRect;

@@ -40,6 +40,7 @@ Las mecanicas principales es el movimiento que si llegas a un borde de la pantal
 ### 📜 Créditos
 
 - Usamos imagenes generadas con gemini 
+-se uso musica sacada de la pagina web pixabay en su apartado de musica gratis
 - nos insipiramos un "poquito" en el juego original de asteroids
 - Agradecimientos a nuestra mama, a rey misterio y a doña lucha que siempre dejaron de creer en nosotros.
 

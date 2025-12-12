@@ -51,6 +51,13 @@ Game::Game(): player() {
         shootSound.setVolume(musicVolume);
     }
 
+    // cargar sonido de explosión de asteroide (opcional)
+    if (explosionSoundBuffer.loadFromFile("assets/Musica/explosionasteroide.mp3")) {
+        explosionSound.setBuffer(explosionSoundBuffer);
+        // Hacer la explosión más suave respecto al volumen general
+        explosionSound.setVolume(musicVolume * 0.4f);
+    }
+
     // iniciar en estado de menú
     state = State::Menu;
 
@@ -90,11 +97,17 @@ void Game::processEvents() {
                 if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
                     musicTracks[currentTrackIndex]->setVolume(musicVolume);
                 }
+                // actualizar sonidos cortos
+                shootSound.setVolume(musicVolume);
+                explosionSound.setVolume(musicVolume * 0.4f);
             } else if (ev.key.code == sf::Keyboard::Down && ev.key.shift) {
                 musicVolume = std::max(0.f, musicVolume - 5.f);
                 if (currentTrackIndex >= 0 && currentTrackIndex < (int)musicTracks.size()) {
                     musicTracks[currentTrackIndex]->setVolume(musicVolume);
                 }
+                // actualizar sonidos cortos
+                shootSound.setVolume(musicVolume);
+                explosionSound.setVolume(musicVolume * 0.4f);
             }
             if (state == State::Menu) {
                 if (ev.key.code == sf::Keyboard::Up || ev.key.code == sf::Keyboard::W) {
@@ -197,6 +210,7 @@ void Game::processEvents() {
                 
                 // Actualizar volumen del sonido de disparo
                 shootSound.setVolume(musicVolume);
+                explosionSound.setVolume(musicVolume * 0.4f);
             }
             // Botones: anterior / play-pause / siguiente
             else if (prevButtonRect.contains((float)mpos.x, (float)mpos.y)) {
@@ -229,6 +243,7 @@ void Game::update(float dt) {
         timeSinceLastShot = 0.f;
         // Reproducir sonido de disparo
         shootSound.setVolume(musicVolume);
+        explosionSound.setVolume(musicVolume * 0.4f);
         shootSound.play();
     }
 
@@ -251,6 +266,7 @@ void Game::update(float dt) {
                 b.alive = false;
                 a.alive = false;
                 score += 100 * (a.size+1);
+                if (explosionSound.getBuffer()) explosionSound.play();
                 // dividir en asteroides más pequeños
                 if (a.size > 0) {
                     for (int i=0;i<2;i++) {
