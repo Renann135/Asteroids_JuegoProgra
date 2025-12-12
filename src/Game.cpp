@@ -5,10 +5,15 @@
 #include <sstream>
 #include <algorithm>
 
-static const int WIDTH = 1280;
-static const int HEIGHT = 720;
+int WIDTH = 1280;
+int HEIGHT = 720;
 
-Game::Game(): window(sf::VideoMode(WIDTH, HEIGHT), "ASTEROIDS"), player() {
+Game::Game(): player() {
+    // Usar la resolución del escritorio y crear la ventana en fullscreen
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+    WIDTH = desktop.width;
+    HEIGHT = desktop.height;
+    window.create(sf::VideoMode(WIDTH, HEIGHT), "ASTEROIDS", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
     // intentar cargar una fuente (opcional)
     if (font.loadFromFile("assets/arial.ttf")) {
